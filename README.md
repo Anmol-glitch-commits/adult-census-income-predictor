@@ -4,9 +4,9 @@ A machine learning web application that predicts whether an individual's annual 
 
 The project covers the complete machine learning workflow — from **data preprocessing and feature engineering to model training, evaluation, and deployment using Streamlit**.
 
-🚀 **Live Demo:** `YOUR_STREAMLIT_APP_URL`
+🚀 **Live Demo:*https://adult-census-income-predictor-n2jmng9kmqmtvrsh3zmxjy.streamlit.app/* ``
 
-💻 **GitHub:** `YOUR_GITHUB_REPOSITORY_URL`
+💻 **GitHub:** `https://github.com/Anmol-glitch-commits/adult-census-income-predictor`
 
 ---
 
