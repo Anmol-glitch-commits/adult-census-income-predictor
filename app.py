@@ -120,14 +120,18 @@ except FileNotFoundError:
 # Remove leading/trailing spaces from column names
 df.columns = df.columns.str.strip()
 
-
-# Replace ? with NaN
-df = df.replace("?", np.nan)
-
-
 # Strip whitespace from all object/string columns
 for col in df.select_dtypes(include="object").columns:
     df[col] = df[col].str.strip()
+
+
+# ============================================================
+# REPLACE '?' WITH 'Unknown'
+# ============================================================
+
+# Replace '?' with 'Unknown' in categorical columns
+for col in df.select_dtypes(include="object").columns:
+    df[col] = df[col].replace("?", "Unknown")
 
 
 # ============================================================
@@ -180,16 +184,40 @@ if invalid_targets:
 
 
 # ============================================================
-# REMOVE DUPLICATES
+# NOTE:
+# Duplicate removal is intentionally done AFTER dropping the same
+# non-model columns as the notebook (Education, Final_census,
+# Unnamed: 15). This reproduces the notebook's 3,441 duplicate
+# removal step more faithfully.
 # ============================================================
 
-before_duplicates = len(df)
+# ============================================================
+# HANDLE MISSING VALUES LIKE THE NOTEBOOK
+# ============================================================
 
-df = df.drop_duplicates()
+# The notebook replaces '?' with NaN and then uses an explicit
+# 'Unknown' category for these categorical columns.
+for col in ["Profession Class", "occupation", "country"]:
+    if col in df.columns:
+        df[col] = df[col].fillna("Unknown")
 
-duplicates_removed = (
-    before_duplicates - len(df)
-)
+
+# ============================================================
+# MAKE CATEGORY LABELS HUMAN-READABLE
+# ============================================================
+
+profession_map = {
+    "Local-gov": "Local government",
+    "Never-worked": "Never worked",
+    "Private": "Private sector",
+    "Self-emp-inc": "Self-employed (incorporated)",
+    "Self-emp-not-inc": "Self-employed (not incorporated)",
+    "State-gov": "State government",
+    "Without-pay": "Without pay"
+}
+
+if "Profession Class" in df.columns:
+    df["Profession Class"] = df["Profession Class"].replace(profession_map)
 
 
 # ============================================================
@@ -209,10 +237,18 @@ existing_columns_to_drop = [
 ]
 
 if existing_columns_to_drop:
+    df = df.drop(columns=existing_columns_to_drop)
 
-    df = df.drop(
-        columns=existing_columns_to_drop
-    )
+
+# ============================================================
+# REMOVE DUPLICATES
+# ============================================================
+
+before_duplicates = len(df)
+
+df = df.drop_duplicates()
+
+duplicates_removed = before_duplicates - len(df)
 
 
 # ============================================================
@@ -552,30 +588,31 @@ st.write(
 # EDUCATION MAPPING
 # ============================================================
 
+# Education-num is the numeric ordinal representation used by the model.
+# The UI shows a human-readable label, then extracts the corresponding number.
 education_mapping = {
     1: "Preschool",
-    2: "1st-4th",
-    3: "5th-6th",
-    4: "7th-8th",
-    5: "9th",
-    6: "10th",
-    7: "11th",
-    8: "12th",
-    9: "HS-grad",
-    10: "Some-college",
-    11: "Assoc-voc",
-    12: "Assoc-acdm",
-    13: "Bachelors",
-    14: "Masters",
-    15: "Prof-school",
-    16: "Doctorate"
+    2: "1st-4th grade",
+    3: "5th-6th grade",
+    4: "7th-8th grade",
+    5: "9th grade",
+    6: "10th grade",
+    7: "11th grade",
+    8: "12th grade",
+    9: "High school graduate",
+    10: "Some college",
+    11: "Associate degree (vocational)",
+    12: "Associate degree (academic)",
+    13: "Bachelor's degree",
+    14: "Master's degree",
+    15: "Professional school degree",
+    16: "Doctorate degree"
 }
 
 
 education_options = [
     f"{num} - {education}"
-    for num, education
-    in education_mapping.items()
+    for num, education in education_mapping.items()
 ]
 
 
@@ -1080,10 +1117,12 @@ st.sidebar.write(
     **Algorithm:** Random Forest
 
     **Preprocessing:**
+    - Unknown category for missing categorical values
     - Median Imputation
     - Standard Scaling
     - Most-Frequent Imputation
     - One-Hot Encoding
+    - Exact duplicate removal after dropping unused columns
 
     **Hyperparameters:**
     - 500 Trees
