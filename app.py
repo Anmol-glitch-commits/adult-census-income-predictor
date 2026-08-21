@@ -219,6 +219,29 @@ profession_map = {
 if "Profession Class" in df.columns:
     df["Profession Class"] = df["Profession Class"].replace(profession_map)
 
+# Occupation
+occupation_map = {
+    "Handlers-cleaners": "Handlers and Cleaners",
+    "Machine-op-inspct": "Machine Operators and Inspectors",
+    "Other-service": "Other Service",
+    "Priv-house-serv": "Private Household Service",
+    "Prof-specialty": "Professional Specialty",
+    "Protective-serv": "Protective Service",
+    "Tech-support": "Technical Support",
+    "Transport-moving": "Transportation and Moving"
+}
+
+df["occupation"] = df["occupation"].replace(occupation_map)
+
+
+# Marital Status
+marital_map = {
+    "Married-AF-spouse": "Married (Armed Forces Spouse)",
+    "Married-civ-spouse": "Married (Civilian Spouse)"
+}
+
+df["marital-status"] = df["marital-status"].replace(marital_map)
+
 
 # ============================================================
 # DROP UNUSED COLUMNS
